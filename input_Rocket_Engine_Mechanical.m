@@ -79,13 +79,9 @@ neumElements = [71,242,176,168,160,144,137,136,126,112,107,124,64,193,62,99,101,
  102,55,114,130,138,148,162,170,178,186,50,52];
 neumElements = sort(neumElements);
 
-% Neumann boundary condition  
-neum = repmat(struct('nodes',zeros(1,length(NodesFI)),'pmax',0,'loadcurveID',id,'elements',neumElements),1,1); 
-
-%F-I boundary
-neum.nodes = NodesFI;
-neum.pmax = 10*10^6; 
-
+% Neumann boundary condition, along F-I boundary
+neum = repmat(struct('nodes',NodesFI,'pmax',10*10^6,'loadcurveID',id,'elements',neumElements),1,1); 
+ 
 
 % % Neumann boundary condition   
 % neum = repmat(struct('nodes',zeros(1,length(NodesFI)),'pmax',0,'loadcurve',id),5,1); 
@@ -113,4 +109,4 @@ neum.pmax = 10*10^6;
 
 % body force aka gravity, Ska g=9.81 in på plats två för att beskriva att
 % dess verkan sker i y-led.
-b = [0; 9.81];
+b = [0; -9.81*matparam(3)];
