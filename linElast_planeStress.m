@@ -24,8 +24,22 @@ function  [es, D, stateVar] = linElast_planeStress(et, ep, matparam, stateVar)
         % strain and stress in z-direction
         eps_zz = -nu/E*(es(1) + es(2));
         sig_zz = 0;
-    else
-       error('Error ! Only ptype = 1 is implemented')
+    
+    elseif (ptype == 2)
+        %Plane strain
+        et = [et(1);et(2);et(3)];
+        
+        %constitutive matrix
+        kappa = E/(1+nu)/(1-2*nu); 
+        D =  kappa * [ 1-nu    nu        0; ...
+                       nu      1-nu      0; ...
+                       0       0         1-2*nu];
+                   
+        es = D*et;
+        
+         % strain and stress in z-direction
+        eps_zz = 0;
+        sig_zz = kappa*[nu,nu]*[et(1);et(2)];
     end;
     
     % save strain for postprocessing

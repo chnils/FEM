@@ -27,7 +27,7 @@ for e=1:nel
        end
     end
     ue = u(edof);
-    Vme = VmNodes(elem(e).cn);
+    Vme = VmNodes(elem(e).cn)
         
     xe = Xe + scale_factor * ue;
     

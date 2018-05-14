@@ -192,10 +192,14 @@ while (time < stopTime)
                         Kce_test = [0,0,0;0,2,1;0,1,2];
                     end
                     
+                    %update Kce vector
+                    %Kce = Kce + L/6*Kce_test*robin(p).alpha*t;
                     Kce = L/6*Kce_test*robin(p).alpha*t;
                      
                     %Update local fsur vector
-                    fsure = fsure + Kce*(ae-robin(p).Tinf);
+                    %fsure = fsure + Kce*(ae-robin(p).Tinf);
+                    fsure = fsure + Kce*ae - robin(p).Tinf*L/2*BoolRobin'*t*robin(p).alpha;
+
                     line([x1 x2],[y1 y2]);
                     hold on;
                     
@@ -267,7 +271,7 @@ while (time < stopTime)
             
        %----fsure fylld----------------------------------------------------
        
-       %----fyll i resterande lokala element vektorer/matriser--------------------
+       %----fyll i resterande lokala element vektorer/matriser-------------
             % element C-matrix
             Ce = plantml(ex', ey', matparam(4)*matparam(3)); 
             %ska matparam(4) gångras med matparam(3)?
@@ -295,7 +299,8 @@ while (time < stopTime)
             fsur(edof) = fsur(edof) + fsure;
                       
             % assemble Ke into the global stiffness matrix K
-            K(edof,edof) = K(edof,edof) +Ke +Kce + Ce/dt;
+            %K(edof,edof) = K(edof,edof) +Ke +Kce + Ce/dt;
+            K(edof,edof) = K(edof,edof) +Ke + Ce/dt;
            
         end
         %----end of element loop-------------------------------------------
