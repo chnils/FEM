@@ -53,6 +53,7 @@ TOL = 1e-10;
 % loop over all time/load steps
 time = 0;
 step = 0;
+figure
 while (time < stopTime)
     time = time + dt;
     % StopTime=1, => while-loopen körs 10 ggr.
@@ -91,7 +92,7 @@ while (time < stopTime)
     % always run through the while loop once to check equilibrium
     rsn = 1.0; % residuum norm
     iter = 0;
-    figure
+    
     while (rsn > TOL && iter < 2) %Denna loppen är skum, görs en gång
         %a 
         %Initialise global fint (internal flux)
@@ -155,30 +156,11 @@ while (time < stopTime)
             %Initialise local fsur
             fsure = zeros(nen,1);
             
-            %index that will identify which boundary AE,EF,FI,IJ,JN that
-            %element is on
-            which_bound = 0;
-            double_boundaries = 0;
             BoolRobin = [0,0,0];
-            k=1;
-            
-            %Här blir fel eftersom när vi kollar vilken boundary varje
-            %element tillhör så gör vi det i ordningen AE,EF,FI,IJ,JN
-            while(k<6)
-                BoolRobin = ismember(elem(e).cn,robin(k).nodes);
-                
-                if sum(BoolRobin) == 2
-                    which_bound=k;
-                    k=6;
-                end
-                if sum(ismember(elem(e).cn,robin(k+1).nodes)) == 2
-                    double_boundaries = 1;
-                end
-                
-                k=k+1;
-            end
-             
-            if which_bound~=0;       
+            for p=1:5
+                if sum(ismember(elem(e).cn, robin(p).nodes))==2
+                    BoolRobin = ismember(elem(e).cn,robin(p).nodes);
+                    
                     if BoolRobin(1)==0
                         x1 = ex(2);
                         x2 = ex(3);
@@ -210,16 +192,78 @@ while (time < stopTime)
                         Kce_test = [0,0,0;0,2,1;0,1,2];
                     end
                     
-                    Kce = L/6*Kce_test*robin(which_bound).alpha*t;
-                    
-                    %Local fsur vector
-                    if e==102                        
-                        trying=0;
-                    end
-                    fsure = Kce*(ae-robin(which_bound).Tinf);
+                    Kce = L/6*Kce_test*robin(p).alpha*t;
+                     
+                    %Update local fsur vector
+                    fsure = fsure + Kce*(ae-robin(p).Tinf);
                     line([x1 x2],[y1 y2]);
                     hold on;
+                    
+                end
             end
+            
+%             %index that will identify which boundary AE,EF,FI,IJ,JN that
+%             %element is on
+%             which_bound = 0;
+%             double_boundaries = 0;
+%             BoolRobin = [0,0,0];
+%             k=1;
+%             
+%             %Här blir fel eftersom när vi kollar vilken boundary varje
+%             %element tillhör så gör vi det i ordningen AE,EF,FI,IJ,JN
+%             while(k<6)
+%                 BoolRobin = ismember(elem(e).cn,robin(k).nodes);
+%                 
+%                 if sum(BoolRobin) == 2
+%                     which_bound=k;
+%                     k=6;
+%                 end
+%                 if sum(ismember(elem(e).cn,robin(k+1).nodes)) == 2
+%                     double_boundaries = 1;
+%                 end
+%                 
+%                 k=k+1;
+%             end
+%              
+%             if which_bound~=0;       
+%                     if BoolRobin(1)==0
+%                         x1 = ex(2);
+%                         x2 = ex(3);
+%                         y1 = ey(2);
+%                         y2 = ey(3);
+%                     end
+%                      if BoolRobin(2)==0
+%                         x1 = ex(1);
+%                         x2 = ex(3);
+%                         y1 = ey(1);
+%                         y2 = ey(3);
+%                      end
+%                      if BoolRobin(3)==0
+%                         x1 = ex(1);
+%                         x2 = ex(2);
+%                         y1 = ey(1);
+%                         y2 = ey(2);
+%                      end
+%                      
+%                      %boundary length to be integrated over
+%                      L = sqrt((x2-x1)^2 + (y2-y1)^2);
+%                      
+%                       Kce_test = zeros(3,3);
+%                     if(BoolRobin == [1,1,0])
+%                         Kce_test = [2, 1, 0; 1, 2, 0; 0, 0, 0];
+%                     elseif(BoolRobin == [1,0,1])
+%                         Kce_test = [2,0,1;0,0,0;1,0,2];
+%                     elseif(BoolRobin == [0,1,1])
+%                         Kce_test = [0,0,0;0,2,1;0,1,2];
+%                     end
+%                     
+%                     Kce = L/6*Kce_test*robin(which_bound).alpha*t;
+%                     
+%                     %Update local fsur vector
+%                     fsure = fsure + Kce*(ae-robin(which_bound).Tinf);
+%                     line([x1 x2],[y1 y2]);
+%                     hold on;
+%             end
             
        %----fsure fylld----------------------------------------------------
        
@@ -247,18 +291,9 @@ while (time < stopTime)
             % assemble fdyne into global dynamic force vector fdyn
             fdyn(edof) = fdyn(edof) + fdyne;
             
-            if e==102
-                trying=fsur(edof);
-            end
-            
             % assemble fsure into global surface force vector fsur
             fsur(edof) = fsur(edof) + fsure;
-            
-%             if e==102
-%                 ghg = [fsur(edof),trying,fsure,ae]
-%             end
-%             
-            
+                      
             % assemble Ke into the global stiffness matrix K
             K(edof,edof) = K(edof,edof) +Ke +Kce + Ce/dt;
            
@@ -282,7 +317,6 @@ while (time < stopTime)
             drltValueIncr = zeros(size(drltValueIncr));
         end
    
-        a([elem(50).cn, elem(242).cn])
         iter = iter + 1;     
     end
     
